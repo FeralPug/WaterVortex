@@ -134,19 +134,6 @@ Shader "Feral_Pug/CycloneWater"
                 noise = tex2Dlod(_HeightMap, float4(offsetWorldPos * _HeightMap_ST.xy + _Time.y * _WaveSpeed, 0, 0)).r * 2 - 1;
                 noise *= tex2Dlod(_HeightMap, float4(offsetWorldPos * _HeightMap_ST.xy - _Time.y * _WaveSpeed + _HeightMap_ST.zw, 0, 0)).r * 2 - 1;
                 h[3] -= cyclone.g + noise * _WaveHeight * (1 - saturate(cyclone.b));
-                
-                /*
-                float4 h;
-                h[0] = tex2D(_HeightTex, uv + texelSize * float2(0, -1)).r * _Displacement;
-                h[1] = tex2D(_HeightTex, uv + texelSize * float2(-1, 0)).r * _Displacement;
-                h[2] = tex2D(_HeightTex, uv + texelSize * float2(1, 0)).r * _Displacement;
-                h[3] = tex2D(_HeightTex, uv + texelSize * float2(0, 1)).r * _Displacement;
-
-                float3 n;
-                n.z = -(h[0] - h[3]);
-                n.x = (h[1] - h[2]);
-                n.y = 2 * texelSize * terrainSize; // pixel space -> uv space -> world space
-                */
             
                 float3 n;
                 //this Z was backwards, unity's plane might have the Z the other direction which is why that is
