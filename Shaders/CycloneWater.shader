@@ -51,7 +51,7 @@ Shader "Feral_Pug/CycloneWater"
             float _WaveHeight;
             float _Tess;
 
-            float _WaveSpeed, _CycloneDepth, _SwirlSpeed, _SwirlAmount, _SwirlSmoothing, _SwirlStrength, _SwirlFalloff, _SwirlRim;
+            float _WaveSpeed;
 
             float4 tessFixed() {
                 return _Tess;
@@ -133,20 +133,7 @@ Shader "Feral_Pug/CycloneWater"
                 }
                 noise = tex2Dlod(_HeightMap, float4(offsetWorldPos * _HeightMap_ST.xy + _Time.y * _WaveSpeed, 0, 0)).r * 2 - 1;
                 noise *= tex2Dlod(_HeightMap, float4(offsetWorldPos * _HeightMap_ST.xy - _Time.y * _WaveSpeed + _HeightMap_ST.zw, 0, 0)).r * 2 - 1;
-                h[3] -= cyclone.g + noise * _WaveHeight * (1 - saturate(cyclone.b));
-                
-                /*
-                float4 h;
-                h[0] = tex2D(_HeightTex, uv + texelSize * float2(0, -1)).r * _Displacement;
-                h[1] = tex2D(_HeightTex, uv + texelSize * float2(-1, 0)).r * _Displacement;
-                h[2] = tex2D(_HeightTex, uv + texelSize * float2(1, 0)).r * _Displacement;
-                h[3] = tex2D(_HeightTex, uv + texelSize * float2(0, 1)).r * _Displacement;
-
-                float3 n;
-                n.z = -(h[0] - h[3]);
-                n.x = (h[1] - h[2]);
-                n.y = 2 * texelSize * terrainSize; // pixel space -> uv space -> world space
-                */
+                h[3] -= cyclone.g + noise * _WaveHeight * (1 - saturate(cyclone.b));             
             
                 float3 n;
                 //this Z was backwards, unity's plane might have the Z the other direction which is why that is
@@ -180,18 +167,12 @@ Shader "Feral_Pug/CycloneWater"
                 float noise = tex2Dlod(_HeightMap, float4(worldPos.xz * _HeightMap_ST.xy + _Time.y * _WaveSpeed, 0, 0)).r * 2 - 1;
                 noise *= tex2Dlod(_HeightMap, float4(worldPos.xz * _HeightMap_ST.xy - _Time.y * _WaveSpeed + _HeightMap_ST.zw, 0, 0)).r * 2 - 1;
 
-                //float disp = cyclone.g + noise * _WaveHeight;// *(1 - saturate(falloff + _SwirlRim));
                 float disp = cyclone.g +noise * _WaveHeight * (1 - saturate(cyclone.b));
 
                 worldPos.y -= disp;
                 v.vertex = mul(unity_WorldToObject, float4(worldPos, 1));
 
-                //v.vertex.y -= disp;
                 v.normal = filterNormal(worldPos.xz, _HeightMap_TexelSize.xy, 100);
-
-
-                //float4 tangent = v.vertex;
-                //tangent.w = v.tangent.w;
 
                 float3 tan = normalize(cross(v.normal, float3(0, 0, 1)));
                 v.tangent.xyz = tan;
@@ -212,38 +193,12 @@ Shader "Feral_Pug/CycloneWater"
                 //calculate uv for cycloneTexture
                 float2 cycloneUV = WorldPosToCameraUV(IN.worldPos.xz);
 
-                //get polar coords
-                float2 uv;
-                PolarCoord(IN.uv_HeightMap, float2(.5, .5), 1, 1, uv);
-
-                //cache distance
-                float distance = uv.x;
-                float angle = uv.y;
-
-                //falloff for the effect
-                //strength controlls how wide the effect area is and falloff controlls the fade
-                float falloff = pow(smoothstep(0, 1, (_SwirlStrength - distance + _SwirlRim) / _SwirlStrength), _SwirlFalloff);
-
-                //amount controlls how coiled the effect is
-                //the 1.0 - x is to have if more spiraled in the center of the effect
-                uv.y += (1.0 - uv.x) * _SwirlAmount;
-                //pulls the swirl in
-                uv.x += _Time.y * _SwirlSpeed;
-
-                //get the swirl texture with the modified uvs
-                //float swirl = tex2D(_SwirlTex, uv).r;
-
-                //final swirl is smoothed with a smoothstep and multiplied by the falloff
-                //swirl = smoothstep(.5 - _SwirlSmoothing, .5 + _SwirlSmoothing, swirl);
-
                 float4 cyclone = tex2D(_CycloneTexture, cycloneUV);
                 if (!(cycloneUV.x >= 0 && cycloneUV.x <= 1.0 && cycloneUV.y >= 0 && cycloneUV.y <= 1.0)) {
                     cyclone = 0;
                 }
                 //lerp to final color based off of swirl value
                 o.Albedo = lerp(_WaterColor.rgb, _SwirlColor.rgb, cyclone.r);
-
-                //o.Normal = UnpackNormal(tex2D(_NormalMap, IN.uv_NormalMap + _Time.y * .1));
 
                 //surface shader stuff
                 // Metallic and smoothness come from slider variables
