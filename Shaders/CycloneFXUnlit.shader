@@ -79,9 +79,6 @@ Shader "Feral_Pug/CycloneFXUnlit"
                 float swirlFalloff = pow(smoothstep(0, 1, (_CycloneSize - distance + _SwirlRim) / _CycloneSize), _SwirlFalloff);
 
                 //amount controlls how coiled the effect is
-                //the 1.0 - x is to have if more spiraled in the center of the effect
-                //polarUV.y += (1.0 - distance) * _SwirlAmount;
-                //polarUV.y += (1.0 - saturate(heightFalloff)) * _SwirlAmount;
                 polarUV.y += saturate(heightFalloff) * _SwirlAmount;
                 //pulls the swirl in, offset so that they are all different
                 polarUV.x += _SwirlOffset;
